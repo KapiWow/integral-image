@@ -1,3 +1,4 @@
+add_subdirectory(task_pool)
 add_subdirectory(image_integrator)
 add_subdirectory(tests)
 
@@ -14,5 +15,4 @@ add_executable(
 target_link_libraries(
     integrate_image 
     image_integrator
-    ${OpenCV_LIBS}
 )
