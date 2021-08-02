@@ -69,13 +69,17 @@ private:
                 int channel
         );
         /// create string of all blocks in row for writing it to file
-        std::string block_row_to_string(int y_block_num, int channel);
+        std::string block_row_to_string(int y_block_num, int channel) const;
         
         int get_block_id(int x, int y, int channel) const {
             return (y * block_count_x + x) * channel_count + channel;
         }
     
-        int& get_block_state(int x, int y, int channel) {
+        int8_t& get_block_state(int x, int y, int channel) {
+            return block_states[get_block_id(x, y, channel)];
+        }
+
+        int8_t get_block_state(int x, int y, int channel) const {
             return block_states[get_block_id(x, y, channel)];
         }
     
@@ -87,8 +91,16 @@ private:
         double& get_res(int x, int y, int channel) {
             return res[get_id(x, y, channel)];
         }
+
+        double get_res(int x, int y, int channel) const {
+            return res[get_id(x, y, channel)];
+        }
     
         uchar& get_data(int x, int y, int channel) {
+            return image.data[get_id(x, y, channel)];
+        }
+
+        uchar get_data(int x, int y, int channel) const {
             return image.data[get_id(x, y, channel)];
         }
     
@@ -97,6 +109,10 @@ private:
         }
     
         std::string& get_block_row_str(int y, int channel) {
+            return block_row_str[get_block_row_id(y, channel)];
+        }
+
+        std::string get_block_row_str(int y, int channel) const {
             return block_row_str[get_block_row_id(y, channel)];
         }
     
@@ -119,7 +135,7 @@ private:
          *
          *  Each channel has its own block. 
          */
-        std::vector<int> block_states;
+        std::vector<int8_t> block_states;
         /// for work with block_states
         std::mutex mtx;
         /// strings for writing to file

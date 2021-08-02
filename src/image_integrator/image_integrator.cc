@@ -1,8 +1,6 @@
 #include <cassert>
-#include <chrono>
 #include <fstream>
 #include <functional>
-#include <iostream>
 #include <limits>
 #include <memory>
 
@@ -55,7 +53,7 @@ ImageIntegrator::~ImageIntegrator() {
 std::string ImageIntegrator::ImageData::block_row_to_string(
         int y_block_num, 
         int channel
-) {
+) const {
     std::stringstream ss;
     ss.precision(std::numeric_limits<double>::max_digits10);
 
@@ -97,6 +95,7 @@ bool ImageIntegrator::ImageData::try_init(std::string path) {
     block_row_str.resize(block_count_y * channel_count);
     block_states.resize(channel_count * block_count_x * block_count_y, 0);
     
+    //change state for blocks near borders
     for (int i = 0; i < block_count_x; i++) {
         for (int j = 0; j < channel_count; j++) {
             get_block_state(i, 0, j)++;
