@@ -7,18 +7,15 @@
 #include <memory>
 
 #include <image_integrator/image_integrator.hh>
-
-void ImageIntegrator::test() 
-{
-    std::cout << "II:test" << std::endl;
-}
+#include <multithread_utils/log.hh>
 
 void ImageIntegrator::process(std::string image_path) 
 {
     if (!is_inited) {
-        std::cout << "ERROR: ImageIntegrator isn't inited" << std::endl;
+        logger("ERROR: ImageIntegrator isn't inited");
+        return;
     }
-    std::shared_ptr<ImageData> image_data_ptr = std::make_shared<ImageData>();
+    std::shared_ptr<ImageData> image_data_ptr = std::make_shared<ImageData>(block_size);
     task_pool.push(new TaskRead{&task_pool, image_path, image_data_ptr});
 }
 
@@ -28,7 +25,7 @@ bool ImageIntegrator::try_init(int thread_count) {
     } else if (thread_count == 0) {
         task_pool.init();
     } else {
-        std::cout << "ERROR: incorrect thread count" << std::endl;
+        logger("ERROR: incorrect thread count");
         return false;
     }
 
@@ -37,12 +34,22 @@ bool ImageIntegrator::try_init(int thread_count) {
 }
 
 void ImageIntegrator::stop() {
+    if (is_inited) {
+        task_pool.stop();
+    }
     is_inited = false;
-    task_pool.stop();
+}
+
+void ImageIntegrator::wait() {
+    if (is_inited) {
+        task_pool.wait();
+    }
 }
 
 ImageIntegrator::~ImageIntegrator() {
-    task_pool.wait();
+    if (is_inited) {
+        task_pool.wait();
+    }
 }
 
 std::string ImageIntegrator::ImageData::block_row_to_string(
@@ -52,8 +59,8 @@ std::string ImageIntegrator::ImageData::block_row_to_string(
     std::stringstream ss;
     ss.precision(std::numeric_limits<double>::max_digits10);
 
-    const int y_start = y_block_num * default_block_size;
-    const int y_end = std::min(image.size[0], (y_block_num + 1) * default_block_size);
+    const int y_start = y_block_num * block_size;
+    const int y_end = std::min(image.size[0], (y_block_num + 1) * block_size);
 
     if (image.data != nullptr) {
         for (int y = y_start; y < y_end; y++) {
@@ -71,19 +78,19 @@ bool ImageIntegrator::ImageData::try_init(std::string path) {
     image = cv::imread(path, cv::IMREAD_COLOR);
 
     if (image.data == nullptr) {
-        std::cout << "ERROR: image(" << path << ") wasn't found" << std::endl;
+        logger("ERROR: image(" + path + ") wasn't found");
         return false;
     }
 
     const int default_image_dim_count = 2;
 
     if (image.size.dims() != default_image_dim_count) {
-        std::cout << "ERROR: image wasn't found in " << path << std::endl;
+        logger("ERROR: image wasn't found in " + path);
         return false;
     }
 
-    block_count_x = round(image.size[1] / double(default_block_size) + 0.5);
-    block_count_y = round(image.size[0] / double(default_block_size) + 0.5);
+    block_count_x = round(image.size[1] / double(block_size) + 0.5);
+    block_count_y = round(image.size[0] / double(block_size) + 0.5);
     channel_count = image.channels();
 
     res.resize(image.size[0] * image.size[1] * channel_count);
@@ -110,10 +117,10 @@ void ImageIntegrator::ImageData::process_block(
         int block_y, 
         int channel
 ) {
-    const int x_start = block_x * default_block_size;
-    const int y_start = block_y * default_block_size;
-    const int x_end = std::min(image.size[1], (block_x + 1) * default_block_size);
-    const int y_end = std::min(image.size[0], (block_y + 1) * default_block_size);
+    const int x_start = block_x * block_size;
+    const int y_start = block_y * block_size;
+    const int x_end = std::min(image.size[1], (block_x + 1) * block_size);
+    const int y_end = std::min(image.size[0], (block_y + 1) * block_size);
 
     for (int y = y_start; y != y_end; y++) {
         //accumulator for current row sum
@@ -227,10 +234,7 @@ void ImageIntegrator::TaskProcess::execute() {
 
 void ImageIntegrator::TaskRead::execute() {
     if (!image_data->try_init(path)) {
-        std::cout << "missing file: " << path << std::endl;
         return;
-    } else {
-        std::cout << "readed: " << path << std::endl;
     }
 
     for( int i = 0; i < image_data->channel_count; i++) {

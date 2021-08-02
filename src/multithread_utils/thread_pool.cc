@@ -14,7 +14,7 @@ void ThreadPool::push(Task* task) {
     cv.notify_one();
 }
 
-void ThreadPool::wait() {
+void ThreadPool::wait() const {
     while (num_task_executing > 0) {
         std::this_thread::sleep_for(std::chrono::microseconds{10});
     }

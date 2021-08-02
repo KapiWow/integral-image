@@ -1,5 +1,9 @@
 project(multithread_utils)
-set(SOURCE_LIB thread_pool.cc)
+set(
+    SOURCE_LIB 
+    thread_pool.cc
+    log.cc
+)
 
 add_library(
     multithread_utils STATIC 

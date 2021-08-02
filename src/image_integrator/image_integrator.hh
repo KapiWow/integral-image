@@ -10,8 +10,6 @@
 
 #include <multithread_utils/thread_pool.hh>
 
-const int default_block_size = 64;
-
 /// Class for creating integral images
 /**
  * It creates integral images along given paths to the original image 
@@ -23,7 +21,6 @@ public:
     ImageIntegrator(ImageIntegrator&) = delete;
     ImageIntegrator& operator= (const ImageIntegrator& ) = delete;
     ~ImageIntegrator();
-    void test(); //TODO: delete
     /// Create an integral image
     /**
      *  Save multichannel integral image to new file *original_name*.integral in 
@@ -44,6 +41,12 @@ public:
     bool try_init(int thread_count);
     /// Wait all tasks to finish and stop integrator
     void stop();
+    /// Wait all tasks to finish 
+    void wait();
+    ///set block size for parallel processing, default is 64
+    void set_block_size(int block_size) { this->block_size = block_size; }
+    ///get block size for parallel processing, default is 64
+    int get_block_size() { return block_size; }
 
 private:
 
@@ -52,6 +55,9 @@ private:
         ImageData() = default;
         ImageData(ImageData&) = default;
         ImageData& operator= (const ImageData&) = default;
+        ImageData(int block_size)
+        :block_size(block_size)
+        {}
         ImageData(std::string path) { try_init(path); }
         
         /// try to read image and create all processing structs if succesed
@@ -65,7 +71,7 @@ private:
         /// create string of all blocks in row for writing it to file
         std::string block_row_to_string(int y_block_num, int channel);
         
-        int get_block_id(int x, int y, int channel) {
+        int get_block_id(int x, int y, int channel) const {
             return (y * block_count_x + x) * channel_count + channel;
         }
     
@@ -73,7 +79,7 @@ private:
             return block_states[get_block_id(x, y, channel)];
         }
     
-        int get_id(int x, int y, int channel) {
+        int get_id(int x, int y, int channel) const {
             return y * image.size[1] * channel_count + 
                 x * channel_count + channel;
         }
@@ -86,7 +92,7 @@ private:
             return image.data[get_id(x, y, channel)];
         }
     
-        int get_block_row_id(int y, int channel) {
+        int get_block_row_id(int y, int channel) const {
             return channel * block_count_y + y;
         }
     
@@ -100,6 +106,8 @@ private:
         std::string path;
         /// data for integral image
         std::vector<double> res;
+        /// size of block
+        int block_size = 64;
         /// states of all blocks
         /**
          *  Data is splitted in several blocks with different states:
@@ -203,6 +211,7 @@ private:
     };
 
     ThreadPool task_pool;
+    int block_size = 64;
     bool is_inited = false;
 };
 

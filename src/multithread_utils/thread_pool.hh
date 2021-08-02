@@ -55,7 +55,7 @@ public:
     void push(Task* task);
 
     /// Wait for all running tasks to finish 
-    void wait();
+    void wait() const;
     /// Finish all tasks and clear pool
     void stop();
 
