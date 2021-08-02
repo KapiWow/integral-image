@@ -1,4 +1,4 @@
-add_subdirectory(task_pool)
+add_subdirectory(multithread_utils)
 add_subdirectory(image_integrator)
 add_subdirectory(tests)
 

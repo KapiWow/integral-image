@@ -1,26 +1,26 @@
-#include <task_pool/task_pool.hh>
+#include <multithread_utils/thread_pool.hh>
 
-void TaskPool::init (int thread_count) {
+void ThreadPool::init (int thread_count) {
     pool.reserve(thread_count);
     for(int i = 0; i != thread_count; ++i){
-        pool.emplace_back(std::thread(&TaskPool::task_loop, this));
+        pool.emplace_back(std::thread(&ThreadPool::task_loop, this));
     }
 }
 
-void TaskPool::push(Task* task) {
+void ThreadPool::push(Task* task) {
     num_task_executing++;
     std::unique_lock<std::mutex> lock{mtx};
     tasks.push(task);
     cv.notify_one();
 }
 
-void TaskPool::wait() {
+void ThreadPool::wait() {
     while (num_task_executing > 0) {
         std::this_thread::sleep_for(std::chrono::microseconds{10});
     }
 }
 
-void TaskPool::stop() {
+void ThreadPool::stop() {
     stopped = true;
     while (num_thread_alive > 0) {
         std::unique_lock<std::mutex> lock{mtx};
@@ -35,7 +35,7 @@ void TaskPool::stop() {
     pool.clear();
 }
 
-void TaskPool::task_loop() {
+void ThreadPool::task_loop() {
     std::unique_lock<std::mutex> lock{mtx};
     num_thread_alive++;
     cv.wait(lock, [&] () {

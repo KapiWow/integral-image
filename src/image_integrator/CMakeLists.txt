@@ -8,7 +8,7 @@ add_library(
 
 target_link_libraries(
     image_integrator
-    task_pool
+    multithread_utils
     ${OpenCV_LIBS}
 )
 
