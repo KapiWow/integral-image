@@ -24,7 +24,7 @@ int main(int argc, char** argv)
     int thread_count = parse_result["threads"].as<int>();
 
     ImageIntegrator ii;
-    if (!ii.try_init(parse_result["threads"].as<int>())) {
+    if (!ii.try_init(thread_count)) {
         return 0;
     }
 

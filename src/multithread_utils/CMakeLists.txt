@@ -1,4 +1,5 @@
 project(multithread_utils)
+
 set(
     SOURCE_LIB 
     thread_pool.cc
@@ -10,8 +11,9 @@ add_library(
     ${SOURCE_LIB}
 )
 
-target_link_libraries(
-    multithread_utils
-    pthread
-)
-
+IF (UNIX)
+    target_link_libraries(
+        multithread_utils
+        pthread
+    )
+ENDIF()
