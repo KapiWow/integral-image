@@ -55,7 +55,7 @@ std::string ImageIntegrator::ImageData::block_row_to_string(
         int channel
 ) const {
     std::stringstream ss;
-    ss.precision(std::numeric_limits<double>::max_digits10);
+    ss.precision(1);
 
     const int y_start = y_block_num * block_size;
     const int y_end = std::min(image.size[0], (y_block_num + 1) * block_size);
@@ -63,7 +63,7 @@ std::string ImageIntegrator::ImageData::block_row_to_string(
     if (image.data != nullptr) {
         for (int y = y_start; y < y_end; y++) {
             for (int x = 0; x < image.size[1]; x++) {
-                ss << get_res(x, y, channel) << ' ';
+                ss << std::fixed << get_res(x, y, channel) << ' ';
             }
             ss << std::endl;
         }
